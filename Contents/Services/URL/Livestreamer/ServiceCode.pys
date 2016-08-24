@@ -7,13 +7,15 @@ def fix_url(url):
 
 def MetadataObjectForURL(url):
 
-    summary = '\n\n'.join([', '.join(s.split('|')) for s in url.split('livestreamer://')[-1].split('||')[1:]])
-    rt = Regex(r'thumb\=([^\,]+)').search(url)
-    ra = Regex(r'art\=([^\|]+)').search(url)
+    slist = url.split('livestreamer://')[-1].split('||')
+    summary = '\n\n'.join([', '.join(s.split('|')) for s in slist[1:]])
+    rt = Regex(r'title\=([^\,]+)').search(slist[0])
+    rth = Regex(r'thumb\=([^\,]+)').search(slist[0])
+    ra = Regex(r'art\=([^\|]+)').search(slist[0])
     return VideoClipObject(
-        title=u'%s' % url,
+        title=rt.group(1).strip() if rt else u'%s' % url,
         summary=u'%s' % summary,
-        thumb=rt.group(1) if rt else None,
+        thumb=rth.group(1) if rt else None,
         art=ra.group(1) if ra else None
         )
 

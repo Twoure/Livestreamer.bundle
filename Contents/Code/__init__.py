@@ -19,7 +19,7 @@ def MainMenu():
             ))
     oc.add(DirectoryObject(
         key=Callback(load_file, file_name=DEFAULT_PLAYLIST),
-        title=u'Reload {}'.format(DEFAULT_PLAYLIST)
+        title=u'Reload {}'.format(DEFAULT_PLAYLIST), thumb=R('icon-reload.png')
         ))
     return oc
 
@@ -75,7 +75,7 @@ def Qualities(title, url, thumb, art):
 
     thumb = thumb if thumb != 'na' else ''
     art = art if art != 'na' else ''
-    final_streams = "livestreamer://" + 'thumb={},art={}||'.format(thumb, art) + '||'.join(new_streams)
+    final_streams = "livestreamer://" + u"title={},thumb={},art={}||".format(title, thumb, art) + "||".join(new_streams)
 
     oc.add(VideoClipObject(
         url=final_streams,
