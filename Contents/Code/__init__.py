@@ -13,10 +13,12 @@ def Start():
 def MainMenu():
     oc = ObjectContainer(no_cache=True)
     for item in Dict['playlist']:
-        oc.add(DirectoryObject(key=Callback(Qualities, url=item['url']),
+        oc.add(DirectoryObject(
+            key=Callback(Qualities, title=unicode(item['name']), url=item['url']),
             title=unicode(item['name'])))
-    oc.add(DirectoryObject(key=Callback(load_file, file_name=DEFAULT_PLAYLIST),
-                           title=u'Reload {}'.format(DEFAULT_PLAYLIST)))
+    oc.add(DirectoryObject(
+        key=Callback(load_file, file_name=DEFAULT_PLAYLIST),
+        title=u'Reload {}'.format(DEFAULT_PLAYLIST)))
     return oc
 
 
@@ -48,7 +50,7 @@ def load_file(file_name):
 
 
 @route(PREFIX+'/qualities')
-def Qualities(url):
+def Qualities(title, url):
     """ get streams from url with livestreamer, list the qualities """
     oc = ObjectContainer()
     try:
@@ -59,12 +61,17 @@ def Qualities(url):
     except livestreamer.PluginError as err:
         Log("Livestreamer plugin error: %s" % err)
         return oc
+
+    new_streams = list()
     for quality in streams:
-        stream = "livestreamer://{}|{}".format(stream_type(streams[quality]), streams[quality].url)
-        try:
-            URLService.MetadataObjectForURL(stream)
-        except:
-            Log.Exception(u"Plex Framework error: can't handle '{}'".format(stream))
-            continue
-        oc.add(VideoClipObject(url=stream, title=quality))
+        st = stream_type(streams[quality])
+        if (st == "HLSStream") or (st == "HTTPStream"):
+            new_streams.append(u"{}|{}|{}".format(st, quality, streams[quality].url))
+
+    if not new_streams:
+        return ObjectContainer(header="Warning", message=u"No Streams for '{}'".format(url))
+
+    final_streams = "livestreamer://" + '||'.join(new_streams)
+    oc.add(VideoClipObject(url=final_streams, title=title))
+
     return oc

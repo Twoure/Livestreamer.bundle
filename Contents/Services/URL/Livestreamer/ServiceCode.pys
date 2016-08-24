@@ -1,47 +1,46 @@
+#!/usr/bin/env python
+
 def fix_url(url):
     Log(url)
-    items = url.split('livestreamer://')[-1].split('|')
-    return items[0], items[1]
+    return [s.split('|') for s in url.split('livestreamer://')[-1].split('||')]
 
 def MetadataObjectForURL(url):
 
+    summary = '\n\n'.join([', '.join(s.split('|')) for s in url.split('livestreamer://')[-1].split('||')])
     return VideoClipObject(
         title=u'%s' % url,
-        summary=u'%s' % url
-    )
+        summary=u'%s' % summary
+        )
 
 def MediaObjectsForURL(url):
-    stream_type, stream_url = fix_url(url)
-    if stream_type == "HLSStream":
-        return [
-            MediaObject(
+    fmt_dict = {'ultra': '1080', 'high': '720', 'mid': '480', 'low': '320'}
+    mo = list()
+    for stream_type, quality, stream_url in fix_url(url):
+        rq = Regex(r'^(\d+)p').search(quality)
+        if stream_type == "HLSStream":
+            mo.append(MediaObject(
                 protocol='hls',
                 container='mpegts',
+                video_resolution=rq.group(1) if rq else (fmt_dict.get(quality, 'sd')),
                 video_codec=VideoCodec.H264,
                 audio_codec=AudioCodec.AAC,
                 audio_channels=2,
                 optimized_for_streaming=True,
                 parts=[PartObject(key=Callback(PlayHLS, url=stream_url, ext='m3u8'))]
-            )
-        ]
-    elif stream_type == "HDSStream":
-        raise Ex.MediaNotAvailable
-    elif stream_type == "AkamaiHDStream":
-        raise Ex.MediaNotAvailable
-    elif stream_type == "HTTPStream":
-        return [
-            MediaObject(
+                ))
+        elif stream_type == "HTTPStream":
+            mo.append(MediaObject(
                 container=Container.MP4,
+                video_resolution=rq.group(1) if rq else (fmt_dict.get(quality, 'sd')),
                 video_codec=VideoCodec.H264,
                 audio_codec=AudioCodec.AAC,
+                audio_channels=2,
                 optimized_for_streaming=True,
                 parts=[PartObject(key=Callback(PlayHTTPStream, url=stream_url))]
-            )
-        ]
-    elif stream_type == "RTMPStream":
+                ))
+    if not mo:
         raise Ex.MediaNotAvailable
-    else:
-        raise Ex.MediaNotAvailable
+    return mo
 
 @indirect
 def PlayHLS(url, **kwargs):
