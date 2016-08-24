@@ -66,7 +66,7 @@ def Qualities(title, url):
     for quality in streams:
         st = stream_type(streams[quality])
         if (st == "HLSStream") or (st == "HTTPStream"):
-            new_streams.append(u"{}|{}|{}".format(st, quality, streams[quality].url))
+            new_streams.append("{}|{}|{}".format(st, quality, streams[quality].url))
 
     if not new_streams:
         return ObjectContainer(header="Warning", message=u"No Streams for '{}'".format(url))
