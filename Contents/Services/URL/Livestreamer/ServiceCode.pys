@@ -9,20 +9,23 @@ def MetadataObjectForURL(url):
 
     slist = url.split('livestreamer://')[-1].split('||')
     summary = '\n\n'.join([', '.join(s.split('|')) for s in slist[1:]])
-    rt = Regex(r'title\=([^\,]+)').search(slist[0])
-    rth = Regex(r'thumb\=([^\,]+)').search(slist[0])
-    ra = Regex(r'art\=([^\|]+)').search(slist[0])
+    title, thumb, art = Regex(r'^title\=(.+)\,thumb\=(.*)\,art\=(.*)$').search(slist[0]).groups()
     return VideoClipObject(
-        title=rt.group(1).strip() if rt else u'%s' % url,
+        title=title if title else u'%s' % url,
         summary=u'%s' % summary,
-        thumb=rth.group(1) if rth else None,
-        art=ra.group(1) if ra else None
+        thumb=thumb if thumb else None,
+        art=art if art else None
         )
 
 def MediaObjectsForURL(url):
-    fmt_dict = {'ultra': '1080', 'high': '720', 'mid': '480', 'low': '320'}
+    fmt_dict = {
+        'ultra': '1080', 'high': '720', 'medium': '480', 'mid': '480',
+        'low': '320', 'mobile': '240'
+        }
     mo = list()
-    for stream_type, quality, stream_url in fix_url(url):
+    for stream_type, quality, stream_url in reversed(sorted(fix_url(url), key=lambda tup: tup[1])):
+        if Regex(r'(audio|best|worst)').search(quality):
+            continue
         rq = Regex(r'^(\d+)p').search(quality)
         if stream_type == "HLSStream":
             mo.append(MediaObject(

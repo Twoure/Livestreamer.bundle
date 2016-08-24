@@ -12,7 +12,7 @@ def Start():
 @handler(PREFIX, NAME, ICON)
 def MainMenu():
     oc = ObjectContainer(no_cache=True)
-    for item in Dict['playlist']:
+    for item in Util.ListSortedByKey(Dict['playlist'], 'name'):
         oc.add(DirectoryObject(
             key=Callback(Qualities, title=unicode(item['name']), url=item['url'], thumb=item.get('thumb', 'na'), art=item.get('art', 'na')),
             title=unicode(item['name']), thumb=Resource.ContentsOfURLWithFallback(item.get('thumb', ''), ICON)
