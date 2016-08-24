@@ -15,7 +15,7 @@ def MetadataObjectForURL(url):
     return VideoClipObject(
         title=rt.group(1).strip() if rt else u'%s' % url,
         summary=u'%s' % summary,
-        thumb=rth.group(1) if rt else None,
+        thumb=rth.group(1) if rth else None,
         art=ra.group(1) if ra else None
         )
 
