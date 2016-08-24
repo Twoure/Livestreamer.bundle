@@ -3,14 +3,18 @@
 def fix_url(url):
     url = url.replace('%7C', '|')  # some clients % encode the '|' but we need it to split
     Log(url)
-    return [s.split('|') for s in url.split('livestreamer://')[-1].split('||')]
+    return [s.split('|') for s in url.split('livestreamer://')[-1].split('||')[1:]]
 
 def MetadataObjectForURL(url):
 
-    summary = '\n\n'.join([', '.join(s.split('|')) for s in url.split('livestreamer://')[-1].split('||')])
+    summary = '\n\n'.join([', '.join(s.split('|')) for s in url.split('livestreamer://')[-1].split('||')[1:]])
+    rt = Regex(r'thumb\=([^\,]+)').search(url)
+    ra = Regex(r'art\=([^\|]+)').search(url)
     return VideoClipObject(
         title=u'%s' % url,
-        summary=u'%s' % summary
+        summary=u'%s' % summary,
+        thumb=rt.group(1) if rt else None,
+        art=ra.group(1) if ra else None
         )
 
 def MediaObjectsForURL(url):

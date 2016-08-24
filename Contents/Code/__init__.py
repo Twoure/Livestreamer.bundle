@@ -14,11 +14,13 @@ def MainMenu():
     oc = ObjectContainer(no_cache=True)
     for item in Dict['playlist']:
         oc.add(DirectoryObject(
-            key=Callback(Qualities, title=unicode(item['name']), url=item['url']),
-            title=unicode(item['name'])))
+            key=Callback(Qualities, title=unicode(item['name']), url=item['url'], thumb=item.get('thumb', 'na'), art=item.get('art', 'na')),
+            title=unicode(item['name']), thumb=Resource.ContentsOfURLWithFallback(item.get('thumb', ''), ICON)
+            ))
     oc.add(DirectoryObject(
         key=Callback(load_file, file_name=DEFAULT_PLAYLIST),
-        title=u'Reload {}'.format(DEFAULT_PLAYLIST)))
+        title=u'Reload {}'.format(DEFAULT_PLAYLIST)
+        ))
     return oc
 
 
@@ -50,7 +52,7 @@ def load_file(file_name):
 
 
 @route(PREFIX+'/qualities')
-def Qualities(title, url):
+def Qualities(title, url, thumb, art):
     """ get streams from url with livestreamer, list the qualities """
     oc = ObjectContainer()
     try:
@@ -71,7 +73,15 @@ def Qualities(title, url):
     if not new_streams:
         return ObjectContainer(header="Warning", message=u"No Streams for '{}'".format(url))
 
-    final_streams = "livestreamer://" + '||'.join(new_streams)
-    oc.add(VideoClipObject(url=final_streams, title=title))
+    thumb = thumb if thumb != 'na' else ''
+    art = art if art != 'na' else ''
+    final_streams = "livestreamer://" + 'thumb={},art={}||'.format(thumb, art) + '||'.join(new_streams)
+
+    oc.add(VideoClipObject(
+        url=final_streams,
+        title=title,
+        thumb=thumb if thumb else None,
+        art=art if art else None
+        ))
 
     return oc
